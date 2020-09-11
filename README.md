@@ -6,22 +6,18 @@
 [![Platform](https://img.shields.io/cocoapods/p/LFAlertController.svg?style=flat)](http://cocoapods.org/pods/LFAlertController)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-SwiftUI List lacks the customizations necessary to hide/modify row divider lines. There are known workaround with setting appearance for UITableView but many times this sets it for all UITableViews in the app and this workaround has also stopped working in iOS14. This project allows full customization of the separators on List and has been tested and works in both iOS13 and iOS14 when compiled with either Xcode 11 or Xcode 12.
+SwiftUI List lacks the customizations necessary to hide/modify row separator lines. There are known workarounds with setting appearance for UITableView but many times this sets it for all UITableViews in the app and this workaround has also stopped working in iOS14. This project allows full customization of the separators on List and has been tested and works in both iOS13 and iOS14 when compiled with either Xcode 11 or Xcode 12.
 
-![](header.png)
-
-## Features
-
-- [x] Feature 1
-- [x] Feature 2
-- [x] Feature 3
-- [x] Feature 4
-- [x] Feature 5
+<p float="left">
+  <img src="/Screenshots/None.png" width="30%" />
+  <img src="/Screenshots/SingleLine.png" width="30%" /> 
+  <img src="/Screenshots/RedInset.png" width="30%" />
+</p>
 
 ## Requirements
 
-- iOS 8.0+
-- Xcode 7.3
+- iOS 13.0+
+- Xcode 11.0+
 
 ## Installation
 
@@ -61,13 +57,13 @@ We would love you for the contribution to **SwiftUIListSeparator**, check the ``
 
 ## Meta
 
-Your Name – [@FindMyClass](https://twitter.com/findmyclass) – KineticSparks@gmail.com
+Michael Schmidt – [@FindMyClass](https://twitter.com/findmyclass) – KineticSparks@gmail.com
 
 Distributed under the MIT license. See ``LICENSE`` for more information.
 
 [https://github.com/SchmidtyApps](https://github.com/SchmidtyApps)
 
-[swift-image]:https://img.shields.io/badge/swift-3.0-orange.svg
+[swift-image]:https://img.shields.io/badge/swift-5.0-orange.svg
 [swift-url]: https://swift.org/
 [license-image]: https://img.shields.io/badge/License-MIT-blue.svg
 [license-url]: LICENSE
