@@ -27,6 +27,7 @@ extension View {
     ///   - inset: Edge insets of the List separator
     ///   - hideOnEmptyRows: If true hides divders on any empty rows ie rows shown in the footer
     /// - Returns: The List with the separator modified
+    @available(iOS, obsoleted:14.0, message:"hideOnEmptyRows is no longer needed because SwiftUI as of iOS14 always hides empty row separators in the footer")
     public func separator(style: ListSeparatorStyle, color: UIColor? = nil, inset: EdgeInsets? = nil, hideOnEmptyRows: Bool) -> some View {
         self.modifier(ListSeparatorModifier(style: style, color: color, inset: inset, hideOnEmptyRows: hideOnEmptyRows))
     }
@@ -151,28 +152,26 @@ class InjectView: UIView {
         return view
     }
 
+    /// If we encounter a separator view in this heirachy hide it
     func hideDividerLineSubviews<T : UIView>(of view:T) {
-        //If we encounter a separator view in this heirachy hide it
-        if "\(type(of: view))".contains("Separator"), view.frame.height < 3 {
+
+        let maxDividerHeight: CGFloat = 3
+
+        // iOS14 compiled with Xcode11
+        if "\(type(of: view))".contains("Separator"), view.frame.height < maxDividerHeight {
             divider(view)
-            //                //view.isHidden = true
-            //                view.backgroundColor = .red
-            //                view.frame.origin.x = 50
+        }
+
+        // iOS14 compiled with Xcode12
+        if let superSuper = view.superview?.superview,
+           "\(type(of: superSuper))".contains("TableViewCell"),
+           view.frame.height < maxDividerHeight {
+            divider(view)
         }
 
         if let table = view as? UITableView {
             self.table(table)
         }
-        //
-        //            //Only set this pre ios14 otherwise it breaks our above hax
-        //            if #available(iOS 14, *) {
-        //                //Do nothing
-        //            } else {
-        //                if let table = view as? UITableView {
-        //                    table.separatorStyle = .none
-        //                    // table.separatorColor = .red
-        //                }
-        //            }
 
         //Continue to iterate thru subview hierarchy
         for subview in view.subviews {
