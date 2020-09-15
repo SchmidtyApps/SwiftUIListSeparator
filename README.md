@@ -30,25 +30,25 @@ SwiftUI List lacks the customizations necessary to hide/modify row separator lin
 Show the standard single divider line (Note: this is equivalent to the sytem default so omitting is the same thing)
 ```swift
 List { <content> }
-    .separator(style: .singleLine)
+    .listSeparatorStyle(.singleLine)
 ```
 
 Hide separators on the List
 ```swift
 List { <content> }
-    .separator(style: .none)
+    .listSeparatorStyle(.none)
 ```
 
 Show a single divider line with configurable color and insets
 ```swift
 List { <content> }
-    .separator(style: .singleLine, color: .red, inset: EdgeInsets(top: 0, leading: 50, bottom: 0, trailing: 20)
+    .listSeparatorStyle(.singleLine, color: .red, inset: EdgeInsets(top: 0, leading: 50, bottom: 0, trailing: 20)
 ```
 
 Show a single divider line and hide the separator on empty rows in the footer
 ```swift
 List { <content> }
-    .separator(style: .singleLine, hideOnEmptyRows: true)
+    .listSeparatorStyle(.singleLine, hideOnEmptyRows: true)
 ```
 
 ## Contribute

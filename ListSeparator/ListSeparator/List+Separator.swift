@@ -17,8 +17,8 @@ extension View {
     ///   - color: Color of the List separator
     ///   - inset: Edge insets of the List separator
     /// - Returns: The List with the separator modified
-    public func separator(style: ListSeparatorStyle, color: UIColor? = nil, inset: EdgeInsets? = nil) -> some View {
-        self.separator(style: style, color: color, inset: inset, hideOnEmptyRows: false)
+    public func listSeparatorStyle(_ style: ListSeparatorStyle, color: UIColor? = nil, inset: EdgeInsets? = nil) -> some View {
+        self.listSeparatorStyle(style, color: color, inset: inset, hideOnEmptyRows: false)
     }
 
     /// Sets the separator style on Lists within this View
@@ -29,7 +29,7 @@ extension View {
     ///   - hideOnEmptyRows: If true hides divders on any empty rows ie rows shown in the footer
     /// - Returns: The List with the separator modified
     @available(iOS, obsoleted:14.0, message:"hideOnEmptyRows is no longer needed because SwiftUI as of iOS14 always hides empty row separators in the footer")
-    public func separator(style: ListSeparatorStyle, color: UIColor? = nil, inset: EdgeInsets? = nil, hideOnEmptyRows: Bool) -> some View {
+    public func listSeparatorStyle(_ style: ListSeparatorStyle, color: UIColor? = nil, inset: EdgeInsets? = nil, hideOnEmptyRows: Bool) -> some View {
         self.modifier(ListSeparatorModifier(style: style, color: color, inset: inset, hideOnEmptyRows: hideOnEmptyRows))
     }
 }

@@ -54,7 +54,7 @@ struct ListWithSeparator: View {
                 Text("Row \(index)")
             }
         }
-        .separator(style: .singleLine)
+        .listSeparatorStyle(.singleLine)
         .navigationBarTitle(Text("Single Line"))
     }
 }
@@ -66,7 +66,7 @@ struct ListWithRedInsetSeparator: View {
                 Text("Row \(index)")
             }
         }
-        .separator(style: .singleLine, color: .red, inset: EdgeInsets(top: 0, leading: 50, bottom: 0, trailing: 20), hideOnEmptyRows: true)
+        .listSeparatorStyle(.singleLine, color: .red, inset: EdgeInsets(top: 0, leading: 50, bottom: 0, trailing: 20), hideOnEmptyRows: true)
         .navigationBarTitle(Text("Single Line/Red/Inset"))
     }
 }
@@ -78,7 +78,7 @@ struct ListWithSeparatorIgnoringEmptyRows: View {
                 Text("Row \(index)")
             }
         }
-        .separator(style: .singleLine, hideOnEmptyRows: true)
+        .listSeparatorStyle(.singleLine, hideOnEmptyRows: true)
         .navigationBarTitle(Text("Single Line/No Empty Rows"))
     }
 }
@@ -90,7 +90,7 @@ struct ListWithoutSeparator: View {
                 Text("Row \(index)")
             }
         }
-        .separator(style: .none)
+        .listSeparatorStyle(.none)
         .navigationBarTitle(Text("None"))
     }
 }
