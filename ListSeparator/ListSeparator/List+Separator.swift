@@ -5,6 +5,7 @@
 //  Created by Mike Schmidt on 9/10/20.
 //  Copyright © 2020 SchmidtyApps. All rights reserved.
 //
+//  https://github.com/SchmidtyApps/SwiftUIListSeparator
 
 import UIKit
 import SwiftUI
@@ -64,17 +65,23 @@ private struct ListSeparatorModifier: ViewModifier {
             ZStack {
                 DividerLineSeekerView(divider: { divider in
                     //If we encounter a separator view in this heirachy hide it
-                    divider.isHidden = self.style == .none
+                    switch self.style {
+                    case .none:
+                        divider.isHidden = true
+                        divider.backgroundColor = .clear
+                    case .singleLine:
+                        divider.isHidden = false
 
-                    if let color = self.color {
-                        divider.backgroundColor = color
-                    }
+                        if let color = self.color {
+                            divider.backgroundColor = color
+                        }
 
-                    if let inset = self.inset {
-                        divider.frame.origin.x = inset.left
+                        if let inset = self.inset {
+                            divider.frame.origin.x = inset.left
 
-                        if let parentWidth = divider.superview?.frame.size.width {
-                            divider.frame.size.width = parentWidth - inset.left - inset.right
+                            if let parentWidth = divider.superview?.frame.size.width {
+                                divider.frame.size.width = parentWidth - inset.left - inset.right
+                            }
                         }
                     }
 
@@ -84,11 +91,12 @@ private struct ListSeparatorModifier: ViewModifier {
                         table.tableFooterView = UIView()
                     }
 
-                    //Only set this pre ios14 otherwise it breaks our above hax
-                    if #available(iOS 14, *) {
-                        //Do nothing
-                    } else {
-                        table.separatorStyle = self.style == .none ? .none : .singleLine
+                    switch self.style {
+                    case .none:
+                        table.separatorStyle = .none
+                        table.separatorColor = .clear
+                    case .singleLine:
+                        table.separatorStyle = .singleLine
 
                         if let color = self.color {
                             table.separatorColor = color
@@ -135,21 +143,12 @@ class InjectView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        let hostingView = self.getHostingView(view: self)
+        guard let hostingView = self.getHostingView(view: self) else { return }
         self.hideDividerLineSubviews(of: hostingView)
     }
 
-    func getHostingView(view: UIView) -> UIView {
-        //crawl up the view hierarchy til we find the hosting view container
-        if "\(type(of: view))".contains("HostingView") {
-            return view
-        }
-
-        if let sup = view.superview {
-            return getHostingView(view: sup)
-        }
-
-        return view
+    func getHostingView(view: UIView) -> UIView? {
+        findViewController()?.view
     }
 
     /// If we encounter a separator view in this heirachy hide it
@@ -157,15 +156,7 @@ class InjectView: UIView {
 
         let maxDividerHeight: CGFloat = 3
 
-        // iOS14 compiled with Xcode11
-        if "\(type(of: view))".contains("Separator"), view.frame.height < maxDividerHeight {
-            divider(view)
-        }
-
-        // iOS14 compiled with Xcode12
-        if let superSuper = view.superview?.superview,
-           "\(type(of: superSuper))".contains("TableViewCell"),
-           view.frame.height < maxDividerHeight {
+        if view.frame.height < maxDividerHeight {
             divider(view)
         }
 
@@ -176,6 +167,18 @@ class InjectView: UIView {
         //Continue to iterate thru subview hierarchy
         for subview in view.subviews {
             hideDividerLineSubviews(of: subview)
+        }
+    }
+}
+
+private extension UIView {
+    func findViewController() -> UIViewController? {
+        if let nextResponder = self.next as? UIViewController {
+            return nextResponder
+        } else if let nextResponder = self.next as? UIView {
+            return nextResponder.findViewController()
+        } else {
+            return nil
         }
     }
 }
