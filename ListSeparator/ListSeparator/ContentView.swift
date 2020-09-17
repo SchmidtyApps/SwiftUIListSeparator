@@ -63,7 +63,7 @@ struct ListWithRedInsetSeparator: View {
     var body: some View {
         List {
             ForEach(0..<5) { index in
-                Text("Row \(index)")
+                NavigationLink("Row \(index)", destination: Text("Row \(index)"))
             }
         }
         .listSeparatorStyle(.singleLine, color: .red, inset: EdgeInsets(top: 0, leading: 50, bottom: 0, trailing: 20), hideOnEmptyRows: true)

@@ -61,54 +61,62 @@ private struct ListSeparatorModifier: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
-        return AnyView(
-            ZStack {
-                DividerLineSeekerView(divider: { divider in
-                    //If we encounter a separator view in this heirachy hide it
-                    switch self.style {
-                    case .none:
-                        divider.isHidden = true
-                        divider.backgroundColor = .clear
-                    case .singleLine:
-                        divider.isHidden = false
+        ZStack {
+            content
+            DividerLineSeekerView(divider: { divider in
+                //If we encounter a separator view in this heirachy hide it
+                switch self.style {
+                case .none:
+                    divider.isHidden = true
+                    divider.backgroundColor = .clear
+                case .singleLine:
+                    divider.isHidden = false
 
-                        if let color = self.color {
-                            divider.backgroundColor = color
-                        }
-
-                        if let inset = self.inset {
-                            divider.frame.origin.x = inset.left
-
-                            if let parentWidth = divider.superview?.frame.size.width {
-                                divider.frame.size.width = parentWidth - inset.left - inset.right
-                            }
-                        }
+                    if let color = self.color {
+                        divider.backgroundColor = color
                     }
 
-                }, table: { table in
+                    if let inset = self.inset {
+                        let leftInset = inset.left
+                        //So we dont continually trigger layout subviews
+                        guard divider.frame.origin.x != leftInset else { return }
 
-                    if self.hideOnEmptyRows {
-                        table.tableFooterView = UIView()
+                        divider.frame.origin.x = leftInset
+
+                        guard let parentWidth = divider.superview?.frame.size.width else { return }
+
+                        let width = parentWidth - inset.left - inset.right
+
+                        guard divider.frame.size.width != width else { return }
+                        divider.frame.size.width = width
+                    }
+                }
+
+            }, table: { table in
+
+                if self.hideOnEmptyRows {
+                    table.tableFooterView = UIView()
+                }
+
+                switch self.style {
+                case .none:
+                    table.separatorStyle = .none
+                    table.separatorColor = .clear
+                case .singleLine:
+                    table.separatorStyle = .singleLine
+
+                    if let color = self.color {
+                        table.separatorColor = color
                     }
 
-                    switch self.style {
-                    case .none:
-                        table.separatorStyle = .none
-                        table.separatorColor = .clear
-                    case .singleLine:
-                        table.separatorStyle = .singleLine
-
-                        if let color = self.color {
-                            table.separatorColor = color
-                        }
-
-                        if let inset = self.inset {
-                            table.separatorInset = inset
-                        }
+                    if let inset = self.inset {
+                        table.separatorInset = inset
                     }
-                })
-                content
-        })
+                }
+            })
+            //Set frame to +1 of max divider height that way we dont also attempt to change this view
+            .frame(width: 1, height: ListConstants.maxDividerHeight + 1, alignment: .leading)
+        }
     }
 }
 
@@ -117,18 +125,28 @@ private struct DividerLineSeekerView : UIViewRepresentable {
     var divider: (UIView) -> Void
     var table: (UITableView) -> Void
 
-    func makeUIView(context: Context) -> UIView  {
-        InjectView(divider: divider, table: table)
+    func makeUIView(context: Context) -> InjectView  {
+        let view = InjectView(divider: divider, table: table)
+        view.updateDividers()
+        return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
+    func updateUIView(_ uiView: InjectView, context: Context) {
+        uiView.updateDividers()
     }
+}
+
+private enum ListConstants {
+    static let maxDividerHeight: CGFloat = 2
 }
 
 //View to inject so we can access UIKit views
 class InjectView: UIView {
     var divider: (UIView) -> Void
     var table: (UITableView) -> Void
+
+    //Used so we only set once in first layout subviews call. Subsequent layouts will get triggered by updateUIView in DividerLineSeekerView
+    var updatedDividers: Bool = false
 
     init(divider: @escaping (UIView) -> Void, table: @escaping (UITableView) -> Void) {
         self.divider = divider
@@ -141,10 +159,21 @@ class InjectView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
+    override func willMove(toSuperview newSuperview: UIView?) {
+        super.willMove(toSuperview: newSuperview)
+        updateDividers()
+    }
+
+    func updateDividers() {
         guard let hostingView = self.getHostingView(view: self) else { return }
         self.hideDividerLineSubviews(of: hostingView)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard !updatedDividers else { return }
+        updateDividers()
+        updatedDividers = true
     }
 
     func getHostingView(view: UIView) -> UIView? {
@@ -154,9 +183,7 @@ class InjectView: UIView {
     /// If we encounter a separator view in this heirachy hide it
     func hideDividerLineSubviews<T : UIView>(of view:T) {
 
-        let maxDividerHeight: CGFloat = 3
-
-        if view.frame.height < maxDividerHeight {
+        if view.frame.height < ListConstants.maxDividerHeight {
             divider(view)
         }
 
