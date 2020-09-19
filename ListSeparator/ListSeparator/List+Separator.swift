@@ -39,6 +39,11 @@ public enum ListSeparatorStyle {
     case singleLine
 }
 
+private enum ListConstants {
+    static let maxDividerHeight: CGFloat = 2
+    static let customDividerTag = 8675309
+}
+
 /// Modifier to set the separator style on List
 private struct ListSeparatorModifier: ViewModifier {
 
@@ -70,26 +75,17 @@ private struct ListSeparatorModifier: ViewModifier {
                     divider.isHidden = true
                     divider.backgroundColor = .clear
                 case .singleLine:
-                    divider.isHidden = false
+                    guard divider.tag != ListConstants.customDividerTag else { return  }
+                    divider.isHidden = true
+                    divider.backgroundColor = .clear
 
-                    if let color = self.color {
-                        divider.backgroundColor = color
-                    }
+                    let customDivider = UIView()
+                    customDivider.frame = divider.frame
+                    customDivider.tag = ListConstants.customDividerTag
 
-                    if let inset = self.inset {
-                        let leftInset = inset.left
-                        //So we dont continually trigger layout subviews
-                        guard divider.frame.origin.x != leftInset else { return }
+                    divider.superview?.addSubview(customDivider)
+                    self.adjust(divider: customDivider)
 
-                        divider.frame.origin.x = leftInset
-
-                        guard let parentWidth = divider.superview?.frame.size.width else { return }
-
-                        let width = parentWidth - inset.left - inset.right
-
-                        guard divider.frame.size.width != width else { return }
-                        divider.frame.size.width = width
-                    }
                 }
 
             }, table: { table in
@@ -98,24 +94,48 @@ private struct ListSeparatorModifier: ViewModifier {
                     table.tableFooterView = UIView()
                 }
 
-                switch self.style {
-                case .none:
+                if #available(iOS 14, *) {
                     table.separatorStyle = .none
                     table.separatorColor = .clear
-                case .singleLine:
-                    table.separatorStyle = .singleLine
+                } else {
+                    switch self.style {
+                    case .none:
+                        table.separatorStyle = .none
+                        table.separatorColor = .clear
+                    case .singleLine:
+                        table.separatorStyle = .singleLine
 
-                    if let color = self.color {
-                        table.separatorColor = color
-                    }
+                        if let color = self.color {
+                            table.separatorColor = color
+                        }
 
-                    if let inset = self.inset {
-                        table.separatorInset = inset
+                        if let inset = self.inset {
+                            table.separatorInset = inset
+                        }
                     }
                 }
             })
             //Set frame to +1 of max divider height that way we dont also attempt to change this view
             .frame(width: 1, height: ListConstants.maxDividerHeight + 1, alignment: .leading)
+        }
+    }
+
+    private func adjust(divider: UIView) {
+        divider.backgroundColor = self.color ?? .lightGray
+
+        if let inset = self.inset {
+            let leftInset = inset.left
+            //So we dont continually trigger layout subviews
+            guard divider.frame.origin.x != leftInset else { return }
+
+            divider.frame.origin.x = leftInset
+
+            guard let parentWidth = divider.superview?.frame.size.width else { return }
+
+            let width = parentWidth - inset.left - inset.right
+
+            guard divider.frame.size.width != width else { return }
+            divider.frame.size.width = width
         }
     }
 }
@@ -127,17 +147,11 @@ private struct DividerLineSeekerView : UIViewRepresentable {
 
     func makeUIView(context: Context) -> InjectView  {
         let view = InjectView(divider: divider, table: table)
-        view.updateDividers()
         return view
     }
 
     func updateUIView(_ uiView: InjectView, context: Context) {
-        uiView.updateDividers()
     }
-}
-
-private enum ListConstants {
-    static let maxDividerHeight: CGFloat = 2
 }
 
 //View to inject so we can access UIKit views
@@ -145,8 +159,7 @@ class InjectView: UIView {
     var divider: (UIView) -> Void
     var table: (UITableView) -> Void
 
-    //Used so we only set once in first layout subviews call. Subsequent layouts will get triggered by updateUIView in DividerLineSeekerView
-    var updatedDividers: Bool = false
+    var didInjectDividerHandler: Bool = false
 
     init(divider: @escaping (UIView) -> Void, table: @escaping (UITableView) -> Void) {
         self.divider = divider
@@ -159,21 +172,82 @@ class InjectView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func willMove(toSuperview newSuperview: UIView?) {
-        super.willMove(toSuperview: newSuperview)
-        updateDividers()
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        injectDividerHandler()
     }
 
-    func updateDividers() {
-        guard let hostingView = self.getHostingView(view: self) else { return }
-        self.hideDividerLineSubviews(of: hostingView)
+    private var scrollViewContentObserver: NSKeyValueObservation?
+
+    private func injectDividerHandler() {
+        guard !didInjectDividerHandler, let parentVC = findViewController(), let scrollView = findScrollView(in: parentVC.view) else { return }
+        print("Attempt to add divider handler to scroll view")
+
+        let dividerHandler = DividerHandlingView(divider: self.divider, table: self.table)
+        dividerHandler.backgroundColor = .red
+        dividerHandler.frame = CGRect(x: 0, y: 0, width: 200, height: 10)
+        scrollView.addSubview(dividerHandler)
+        scrollView.bringSubviewToFront(dividerHandler)
+
+        scrollViewContentObserver = scrollView.observe(\UIScrollView.contentOffset, options: .new) { (_, _) in
+            dividerHandler.updateDividers()
+        }
+
+        self.didInjectDividerHandler = true
+    }
+
+    private func findScrollView(in view: UIView) -> UIScrollView? {
+
+        if let scrollView = view as? UIScrollView {
+            print("Found scroll view")
+            return scrollView
+        }
+
+        //Continue to iterate thru subview hierarchy
+        for subview in view.subviews {
+            return findScrollView(in: subview)
+        }
+
+        return nil
+    }
+}
+
+//View to inject so we can access UIKit views
+class DividerHandlingView: UIView {
+    var divider: (UIView) -> Void
+    var table: (UITableView) -> Void
+
+    var count: Int = 0
+
+    init(divider: @escaping (UIView) -> Void, table: @escaping (UITableView) -> Void) {
+        self.divider = divider
+        self.table = table
+
+        super.init(frame: .zero)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard !updatedDividers else { return }
         updateDividers()
-        updatedDividers = true
+        print("layout subviews")
+
+    }
+
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        print("draw rect")
+        updateDividers()
+    }
+
+    func updateDividers() {
+        count += 1
+        print("BB: \(count)")
+        guard let hostingView = self.getHostingView(view: self) else { return }
+        self.handleDividerLineSubviews(of: hostingView)
     }
 
     func getHostingView(view: UIView) -> UIView? {
@@ -181,7 +255,7 @@ class InjectView: UIView {
     }
 
     /// If we encounter a separator view in this heirachy hide it
-    func hideDividerLineSubviews<T : UIView>(of view:T) {
+    func handleDividerLineSubviews<T : UIView>(of view:T) {
 
         if view.frame.height < ListConstants.maxDividerHeight {
             divider(view)
@@ -193,10 +267,11 @@ class InjectView: UIView {
 
         //Continue to iterate thru subview hierarchy
         for subview in view.subviews {
-            hideDividerLineSubviews(of: subview)
+            handleDividerLineSubviews(of: subview)
         }
     }
 }
+
 
 private extension UIView {
     func findViewController() -> UIViewController? {
