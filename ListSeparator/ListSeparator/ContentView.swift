@@ -27,6 +27,10 @@ struct ContentView: View {
                 NavigationLink(destination: ListWithSeparatorIgnoringEmptyRows()) {
                     ContentCell(title: "Single Line, Ignoring Empty Rows", subtitle: ".separator(style: .singleLine, hideOnEmptyRows: true)")
                 }
+
+                NavigationLink(destination: SectionListWithoutSeparator()) {
+                    ContentCell(title: "No Line with List Sections", subtitle: ".separator(style: .none)")
+                }
             }
             .navigationBarTitle(Text("List Separator Style"))
         }
@@ -86,11 +90,36 @@ struct ListWithSeparatorIgnoringEmptyRows: View {
 struct ListWithoutSeparator: View {
     var body: some View {
         List {
-            ForEach(0..<5) { index in
-                Text("Row \(index)")
+            ForEach(0..<30) { index in
+                VStack {
+                    Text("Item \(index)")
+                }
             }
         }
         .listSeparatorStyle(.none)
         .navigationBarTitle(Text("None"))
+    }
+}
+
+struct SectionListWithoutSeparator: View {
+    var body: some View {
+        List {
+            ForEach(1..<4) { i in
+                Section(header: Text("Section \(i)"), content: {
+                    ForEach(1..<4) { j in
+                        HStack {
+                            VStack {
+                                Text("Example content")
+                                Text("Awesomeness")
+                            }
+                            Spacer()
+                            Image(systemName: "gear")
+                        }
+                    }
+                })
+            }
+        }
+        .listSeparatorStyle(.none) 
+        .navigationBarTitle("Example")
     }
 }
