@@ -32,6 +32,9 @@ SwiftUI List lacks the customizations necessary to hide/modify row separator lin
 1. Download and drop ```List+Separator.swift``` in your project.  
 2. Congratulations!  
 
+#### Swift Package Manager
+https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app
+
 ## Usage example
 
 Show the standard single divider line (Note: this is equivalent to the sytem default so omitting is the same thing)
