@@ -5,6 +5,22 @@ Help support my open source work!
   </p>
 
 
+# Disclaimer
+So while this project seems to work fairly well for many implementations it is clear that depending on specific setups sometimes the underlying UIKit code backing the SwiftUI list changes and ends up breaking this workaround. If it is not working my current suggestion would be to log an issue with specifics and instead do something along the lines of:
+
+```
+if #available(iOS 14, *) {
+   LazyVStack { content() }
+} else {
+   List { content() }
+}
+
+func content() -> some View {
+ //Table rows go here
+}
+```
+<br />
+
 # SwiftUI List Separator
 > View extension to hide/modify List separators in SwiftUI iOS13 and iOS14.
 
