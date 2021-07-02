@@ -4,6 +4,9 @@ Help support my open source work!
 <a href="https://www.buymeacoffee.com/SchmidtyApps" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/arial-black.png" alt="Buy Me A Coffee" width="200px" ></a>
   </p>
 
+# iOS15
+List finally supports setting list row separator color and style as of iOS15! They still don't support list inset because....reasons? Here is a quick tutorial of how to use the new functionality in iOS15 and if you need custom insets you can always hide the lines and then use a custom Divider on each cell. Now this hack of repo can die the slow painful death it deserves.
+https://www.hackingwithswift.com/quick-start/swiftui/how-to-adjust-list-row-separator-visibility-and-color
 
 # Disclaimer
 So while this project seems to work fairly well for many implementations it is clear that depending on specific setups sometimes the underlying UIKit code backing the SwiftUI list changes and ends up breaking this workaround. If it is not working my current suggestion would be to log an issue with specifics and instead do something along the lines of:
